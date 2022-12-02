@@ -1,0 +1,49 @@
+div {
+    color: brown;
+}
+
+body{
+    background-color: rgba(0, 0, 0,0); 
+}
+
+.btn_submit{
+    background-image: url('/uploadpage/Images/T_Btn_Box_50_50.png');
+    width: 50px;
+    height: 50px;
+    cursor:pointer;
+    border: 0px;
+    color: white;
+    text-align: center;
+   }
+   
+
+.filebox label {
+    display: inline-block;
+    background-image: url('/uploadpage/Images/T_Btn_FileUpload2_50_50.png');
+    background-position:  0px 0px;
+    background-repeat: no-repeat;
+    width: 50px;
+    height: 50px;
+    border: 0px;
+    cursor:pointer;
+    outline: 0;
+  }
+  
+  .filebox input[type="file"] {  /* 파일 필드 숨기기 */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip:rect(0,0,0,0);
+    border: 0;
+  }
+
+  .Container{
+    display: flex;
+    width: 430px;
+    justify-content: space-between;
+  }
+
+  

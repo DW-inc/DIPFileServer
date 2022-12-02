@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <link rel="stylesheet" href="/uploadpage/index.css">
+    
+  </head>
+  <body>
+      <form
+        enctype="multipart/form-data"
+        action="http://192.168.0.9:8009/upload"
+        method="post"
+        class="Container"
+        target="prevent"
+      >
+      <iframe id="prevent" name="prevent" style="display:none"></iframe>
+
+      <div class="filebox">
+        <label for="upFile"></label> 
+        <input id="upFile" type="file" name="file" accept=".jpg,.png,.mp4,.pdf,.ppt,.pptx,.fbx"> 
+      </div>
+        <input type="image" src="/uploadpage/Images/W_ProgressBar_300_50.png" style="height: 51px; width: 301px;">
+      <input type="submit" class="btn_submit" value="OK"/>
+      </form>
+  </body>
+</html>
