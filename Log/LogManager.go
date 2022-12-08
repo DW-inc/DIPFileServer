@@ -23,11 +23,11 @@ func GetLogManager() *LogHandler {
 	return Log_Ins
 }
 
-func (l *LogHandler) SetLogFile() {
+func (l *LogHandler) SetLogFile(Port string) {
 	// 현재시간
 	startDate := time.Now().Format("2006-01-02")
 	// log 폴더 위치
-	logFolderPath := "/dipnas/DIPServer/ServerLog/" + GetServerType(":3000")
+	logFolderPath := "/dipnas/DIPServer/ServerLog/" + GetServerType(Port)
 
 	// log 파일 경로
 	logFilePath := fmt.Sprintf("%slogFile-%s.log", logFolderPath, startDate)
@@ -102,6 +102,10 @@ func GetServerType(port string) string {
 		return "Voice1/"
 	case "10.5.147.131:8000":
 		return "Voice2/"
+	case "10.5.147.184:4401":
+		return "File1/"
+	case "10.5.147.192:4401":
+		return "File2/"
 	}
 	return "err/"
 }
