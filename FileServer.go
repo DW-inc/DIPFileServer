@@ -8,18 +8,17 @@ import (
 	cts "github.com/DW-inc/FileServer/CTS"
 	drm "github.com/DW-inc/FileServer/DRM"
 	logm "github.com/DW-inc/FileServer/Log"
+	"github.com/DW-inc/FileServer/setting"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-var Port, NasPath, CTSAddress string
-
 func main() {
-	ServerTypeSetting(0) // 0: PPRK, 1: HyunDai STR 8088, 2: HyunDai CTS 4401
+	setting.GetStManager().Init()
 	//------------ INIT Setting  ------------//
-	logm.GetLogManager().SetLogFile(Port)
+	logm.GetLogManager().SetLogFile(setting.St_Ins.Port)
 	app := fiber.New(fiber.Config{
 		BodyLimit: 9999 * 1024 * 1024,
 		// ie
@@ -28,10 +27,8 @@ func main() {
 	})
 	app.Use(cors.New(cors.ConfigDefault))
 	app.Use(logger.New(logger.ConfigDefault))
-	cts.GetCtsManager().Init(CTSAddress)
-	//CtsConn := ConnecToCTS()
+	cts.GetCtsManager().Init(setting.St_Ins.CTSAddress)
 	//------------ INIT Setting  ------------//
-
 	app.Static("/uploadpage", "./UploadPage")
 
 	// app.Use("/nas", filesystem.New(filesystem.Config{
@@ -39,36 +36,18 @@ func main() {
 	// }))
 
 	app.Get("/nas/:ChNum/:FileName", func(c *fiber.Ctx) error {
-		//c.Set(fiber.HeaderCacheControl, "no-store, max-age=0")
-		//log.Println(c.Request().Header.String())
-		//log.Println(c.Response().Header.String())
-
-		//target := c.Get("Target")
-		//log.Println(target)
-		log.Println(c.Params("ChNum") + "/" + c.Params("FileName"))
 		filePath := c.Params("ChNum") + "/" + c.Params("FileName")
 
 		filePath, err := url.QueryUnescape(filePath)
 		if err != nil {
 			log.Println("url parse faile :", err)
 		}
-		log.Println("parsee", filePath)
-
-		// jData, err := json.Marshal(filePath)
-		// if err != nil {
-		// 	log.Println(err)
-		// }
-		// log.Println("JSONNNN:", string(jData))
+		log.Println(c.Params("ChNum") + "/" + filePath)
 
 		return c.Download("../Server/Storage/nas/" + filePath)
-		//return c.Download()
 	})
 
 	app.Post("/upload", func(c *fiber.Ctx) error {
-		//log.Println("BODY:", string(c.Body()))
-		//log.Println("HEADER1", string(c.Request().Header.Header()))
-		//log.Println("HEADER2", string(c.Response().Header.Header()))
-
 		LocalIP := strings.Split(c.Context().RemoteAddr().String(), ":")[0]
 
 		c.Context().SetContentType("multipart/form-data")
@@ -78,8 +57,6 @@ func main() {
 			if SaveFileErr := c.SaveFile(file, file.Filename); SaveFileErr != nil {
 				log.Println("SaveFile fail", SaveFileErr)
 			} else {
-				// Send Packet to CTS Server
-
 				TempFileName := file.Filename
 				FinalFileName := file.Filename
 				IsPPT := "pptx" == TempFileName[len(TempFileName)-4:]
@@ -127,7 +104,7 @@ func main() {
 				}
 
 				// NasUpload
-				Success := drm.GetDrmManager().FileChangeNameMove(TempFileName, "", NasPath+"{"+LocalIP+"}"+FinalFileName)
+				Success := drm.GetDrmManager().FileChangeNameMove(TempFileName, "", setting.GetStManager().NasPath+"{"+LocalIP+"}"+FinalFileName)
 
 				// 업로드 성공 패킷 Send
 				// packet2 := R_UploadComplete{}
@@ -175,28 +152,11 @@ func main() {
 		return nil
 	})
 
-	app.Listen(Port)
+	app.Listen(setting.GetStManager().Port)
 }
 
 type S_WebFileCompelete struct {
 	Ip        string
 	IsSuccess bool
 	FileName  string
-}
-
-func ServerTypeSetting(Stype int) { // 0: PPRK, 1: HyunDai STR 8088, 2: HyunDai CTS 4401
-	switch Stype {
-	case 0:
-		Port = ":8009"
-		NasPath = "../Server/Storage/nas/"
-		CTSAddress = "192.168.0.9:8001"
-	case 1:
-		Port = ":8088"
-		NasPath = "/dipnas/DIPServer/Storage/"
-		CTSAddress = "10.5.147.88:8000"
-	case 2:
-		Port = ":4401"
-		NasPath = "/dipnas/DIPServer/Storage/"
-		CTSAddress = "10.5.147.88:8000"
-	}
 }
