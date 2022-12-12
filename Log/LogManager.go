@@ -28,7 +28,7 @@ func (l *LogHandler) SetLogFile(Port string) {
 	// 현재시간
 	startDate := time.Now().Format("2006-01-02")
 	// log 폴더 위치
-	logFolderPath := setting.GetStManager().NasPath
+	logFolderPath := setting.GetStManager().LogPath
 
 	// log 파일 경로
 	logFilePath := fmt.Sprintf("%slogFile-%s.log", logFolderPath, startDate)

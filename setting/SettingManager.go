@@ -23,13 +23,13 @@ func GetStManager() *SettingHandler {
 }
 
 func (st *SettingHandler) Init() {
-	st.ServerType = 0 // 0: 나, 1: 원효로1번서버, 2: 원효로2번서버, 3: 민석님
+	st.ServerType = 0 // 0: 나, 1: 원효로1번서버, 2: 원효로2번서버
 
 	switch st.ServerType {
 	case 0:
 		st.Port = ":8009"
 		st.NasPath = "../Server/Storage/nas/"
-		st.LogPath = "/data/DIPServerLog/FileServer1/"
+		st.LogPath = "/data/DIPServerLog/FileServer/"
 		st.CTSAddress = "192.168.0.9:8001"
 	case 1:
 		st.Port = ":4401"
@@ -41,10 +41,5 @@ func (st *SettingHandler) Init() {
 		st.NasPath = "/dipnas/DIPServer/Storage/"
 		st.LogPath = "/data/DIPServerLog/FileServer2/"
 		st.CTSAddress = "10.5.147.88:8000"
-	case 3:
-		st.Port = ":8009"
-		st.NasPath = "../Server/Storage/nas/"
-		st.LogPath = "/data/DIPServerLog/FileServer1/"
-		st.CTSAddress = "192.168.0.19:8001"
 	}
 }
