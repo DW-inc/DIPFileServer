@@ -3,9 +3,11 @@ package main
 import (
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
 	cts "github.com/DW-inc/FileServer/CTS"
+	db "github.com/DW-inc/FileServer/DB"
 	drm "github.com/DW-inc/FileServer/DRM"
 	logm "github.com/DW-inc/FileServer/Log"
 	"github.com/DW-inc/FileServer/setting"
@@ -17,8 +19,10 @@ import (
 
 func main() {
 	setting.GetStManager().Init()
+	db.GetDBManager().Init()
+
 	//------------ INIT Setting  ------------//
-	logm.GetLogManager().SetLogFile(setting.St_Ins.Port)
+	logm.GetLogManager().SetLogFile()
 	app := fiber.New(fiber.Config{
 		BodyLimit: 9999 * 1024 * 1024,
 		// ie
@@ -29,6 +33,23 @@ func main() {
 	app.Use(logger.New(logger.ConfigDefault))
 	cts.GetCtsManager().Init(setting.St_Ins.CTSAddress)
 	//------------ INIT Setting  ------------//
+	app.Get("/uploadpage", func(c *fiber.Ctx) error {
+		IP := strings.Split(c.Context().RemoteAddr().String(), ":")[0]
+		log.Println("UploadPage Request", IP)
+
+		WebLoginData := &db.WebLogin{}
+		err := db.GetDBManager().DBMS.Table("web_login").Where("ip = ?", IP).Select("sso_id", "is_online").First(&WebLoginData).Error
+		if err != nil || !WebLoginData.IsOnline || WebLoginData.SsoId != "" {
+			if setting.GetStManager().ServerType != 0 { //회사 내부에서는 테스트 가능하게 하기 위해
+				log.Println(err)
+				log.Println("IsOfflineUser Give NullPage")
+				return nil
+			}
+		}
+		log.Println("IsOnlineUser Give UploadPage")
+		return c.Next()
+	})
+
 	app.Static("/uploadpage", "./UploadPage")
 
 	// app.Use("/nas", filesystem.New(filesystem.Config{
@@ -36,15 +57,20 @@ func main() {
 	// }))
 
 	app.Get("/nas/:ChNum/:FileName", func(c *fiber.Ctx) error {
-		filePath := c.Params("ChNum") + "/" + c.Params("FileName")
+		ChNum, _ := strconv.Atoi(c.Params("ChNum"))
+		if ChNum < -1 {
+			ChNum = -1 * ChNum / 10000
+		}
+		ChNumstring := strconv.FormatInt(int64(ChNum), 10)
+		filePath := ChNumstring + "/" + c.Params("FileName")
 
 		filePath, err := url.QueryUnescape(filePath)
 		if err != nil {
 			log.Println("url parse faile :", err)
 		}
-		log.Println(c.Params("ChNum") + "/" + filePath)
+		log.Println(ChNumstring + "/" + filePath)
 
-		return c.Download("../Server/Storage/nas/" + filePath)
+		return c.Download(setting.St_Ins.NasPath + filePath)
 	})
 
 	app.Post("/upload", func(c *fiber.Ctx) error {
@@ -133,6 +159,7 @@ func main() {
 					// 		log.Println("ppt변환 끝 보내기 실패")
 					// 	}
 					// }
+
 					LocalIP := strings.Split(c.Context().RemoteAddr().String(), ":")[0]
 
 					packet := S_WebFileCompelete{Ip: LocalIP, IsSuccess: true, FileName: FinalFileName}
@@ -151,6 +178,23 @@ func main() {
 		}
 		return nil
 	})
+
+	// app.Get("/saveCookie", func(c *fiber.Ctx) error {
+	// 	IP := strings.Split(c.Context().RemoteAddr().String(), ":")[0]
+	// 	GameSessionStorage.Store(IP, true)
+	// 	log.Println("Online User :", IP)
+	// 	// sess, err := SessionStorage.Get(c)
+	// 	// if err != nil {
+	// 	// 	log.Println("SessionGet Err", err)
+	// 	// }
+	// 	// sess.Set("ssoid", sso_id)
+	// 	// if err := sess.Save(); err != nil {
+	// 	// 	log.Println("SessionSave Err", err)
+	// 	// } else {
+	// 	// 	log.Println("SessionSave Success", sso_id)
+	// 	// }
+	// 	return nil
+	// })
 
 	app.Listen(setting.GetStManager().Port)
 }
